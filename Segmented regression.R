@@ -29,17 +29,24 @@ colnames(engdat) <- c("Country", "Sex", "Quarter",
                      "EndDate")
 
 
-### Some common sense checks
+
+### Some common sense checks #################################
 
 ggplot(engdat, aes(EndDate, ASR90,color=Sex)) + geom_point() + stat_smooth(method="lm") 
 
 fitdat <- engdat %>% filter(Sex == "Females") 
+plot(fitdat$EndDate, fitdat$ASR90)
 fit <- lm(ASR90 ~ EndDate , data = fitdat)
 summary(segmented(fit))
 plot(segmented(fit))
 
 
-# COMPARING WITH ONS DATA ###########################
+
+# COMPARING WITH ONS DATA #############################################
+
+# The ONS used this data and this method to calculate breakpoints for all age-groups
+# and both sexes. Here we carry out the same method and compare results with their,
+# to check we're doing things correctly.
 
 Sex <- c("Males", "Females")
 Age <- c("AllAgeASR","U75ASR", "ASR7579","ASR8084", "ASR8590","ASR90")
@@ -57,29 +64,35 @@ for (i in Sex){
 
 colnames(EnglandTest) <- c("Country", "Sex", "Age", "Breakpoint")
 
+print(EnglandTest)
 
 ggplot(engdat, aes(EndDate, ASR90,color=Sex)) + geom_point() + stat_smooth(method="lm") 
 
-### NEW #################################################
 
-# Data from the start of 2012 to the start of 2018
-start_year <- 2012
-end_year <- 2018
+### Predicting #################################################
 
-# Predicting deaths from the start of 2018 to the start of 2019
-pred_year <- 2018
+# Data from the start of 2010 to the end of 2015
+start_year <- 2010
+end_year <- 2015
+
+# Predicting deaths for all of 2018 for females
+pred_year <- 2016
 sex_choice <- "Females"
 
-fitdat <- engdat %>% filter(Sex == sex_choice, EndDate <= end_year, EndDate >= start_year + 0.25)
+# fitdat is the data used to fit the model. fit is the fitted lm. segmod is the segmented model.
+fitdat <- engdat %>% filter(Sex == sex_choice, EndDate <= end_year, EndDate >= start_year)
 fit <- lm(AllAgeDeaths ~ EndDate , data = fitdat)
 segmod <- segmented(fit)
 plot(segmod)
 
-preddat <- seq(pred_year+0.25, pred_year+1, by= 0.25) # Make a dataframe and call it end-date so preddat$endate
+# The years we are predicting for
+preddat <- data.frame(seq(pred_year, pred_year+1, by= 0.25))
+colnames(preddat) <- c("EndDate")
 
-predvals <- predict.segmented(segmod, data = preddat)
+predvals <- predict.segmented(segmod, newdata = preddat)
 dates <- preddat$EndDate
-plot(predvals)
-?
-ggplot(predvals, aes(EndDate, AllAgeDeaths, color=Sex)) + geom_point() 
-+ geom_line(data=predmod)
+truevals <- (engdat %>% filter(Sex==sex_choice, EndDate >= pred_year+1, EndDate <= pred_year+2))$AllAgeDeaths
+
+output <- cbind(dates, predvals, truevals)
+output
+
