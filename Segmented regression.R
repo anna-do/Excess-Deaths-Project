@@ -6,7 +6,9 @@ library(tidyverse)
 library(readxl)
 library(segmented)
 
-engdat <- read_excel("referencetables09032020145206.xls",
+# SETUP ################################################
+
+engdat <- read_excel("Test data for segmented reg.xls",
                   sheet = "England ASRs", 
                   col_names = FALSE, 
                   skip = 17)
@@ -35,9 +37,9 @@ fitdat <- engdat %>% filter(Sex == "Females")
 fit <- lm(ASR90 ~ EndDate , data = fitdat)
 summary(segmented(fit))
 plot(segmented(fit))
-points(fitdat$EndDate, fitdat$ASR90, color=)
 
-###
+
+# COMPARING WITH ONS DATA ###########################
 
 Sex <- c("Males", "Females")
 Age <- c("AllAgeASR","U75ASR", "ASR7579","ASR8084", "ASR8590","ASR90")
@@ -55,3 +57,29 @@ for (i in Sex){
 
 colnames(EnglandTest) <- c("Country", "Sex", "Age", "Breakpoint")
 
+
+ggplot(engdat, aes(EndDate, ASR90,color=Sex)) + geom_point() + stat_smooth(method="lm") 
+
+### NEW #################################################
+
+# Data from the start of 2012 to the start of 2018
+start_year <- 2012
+end_year <- 2018
+
+# Predicting deaths from the start of 2018 to the start of 2019
+pred_year <- 2018
+sex_choice <- "Females"
+
+fitdat <- engdat %>% filter(Sex == sex_choice, EndDate <= end_year, EndDate >= start_year + 0.25)
+fit <- lm(AllAgeDeaths ~ EndDate , data = fitdat)
+segmod <- segmented(fit)
+plot(segmod)
+
+preddat <- seq(pred_year+0.25, pred_year+1, by= 0.25) # Make a dataframe and call it end-date so preddat$endate
+
+predvals <- predict.segmented(segmod, data = preddat)
+dates <- preddat$EndDate
+plot(predvals)
+?
+ggplot(predvals, aes(EndDate, AllAgeDeaths, color=Sex)) + geom_point() 
++ geom_line(data=predmod)
