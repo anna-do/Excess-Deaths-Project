@@ -4,6 +4,7 @@ library(tidyr)
 library(stringr)
 library(reshape2)
 library(purrr)
+library(ggplot2)
 
 # England and Wales
 # Load the population data
@@ -97,10 +98,8 @@ EngWal_pop_all <- EngWal_pop %>%
 process_deaths_data <- function(deaths_data, gender) {
   deaths_data %>%
     mutate(Year = as.integer(Year), WeekNumber = as.integer(WeekNumber)) %>%
-    # Ensure numeric columns are converted to character before pivoting
     mutate(across(where(is.numeric), as.character)) %>%
     select(-`All ages`, -`Total_Deaths`) %>% # 
-    # Pivot longer, excluding 'All ages' and 'Total_Deaths' from pivoting
     pivot_longer(
       cols = -c(Year, WeekNumber),
       names_to = "Age_Group",
@@ -410,7 +409,7 @@ calculate_weekly_cumulative_rASMR <- function(cumulative_asmr_df, start_year, en
 # Apply the function to calculate weekly cumulative rASMR for the years 2017 to 2021
 rcASMR_all <- calculate_weekly_cumulative_rASMR(cASMR_all, 2017, 2021)
 
-# Print the resulting data frames
+
 print(rcASMR_all)
 
 
@@ -419,7 +418,7 @@ EngWal_three_year_weekly_avg <- rcASMR_all %>%
   filter(Year >= 2018 & Year <= 2020) %>%
   group_by(Week) %>%
   summarise(Mean_ASMR_3yr_avg = mean(rASMR, na.rm = TRUE)) %>%
-  ungroup() # Remove grouping
+  ungroup() 
 
 rASMR_EngWal_baseline <- ggplot(rcASMR_all, aes(x = Week, y = rASMR, group = as.factor(Year), color = as.factor(Year))) +
   geom_line() +
@@ -436,7 +435,7 @@ rASMR_EngWal_baseline <- ggplot(rcASMR_all, aes(x = Week, y = rASMR, group = as.
 
 print(rASMR_EngWal_baseline)
 
-# Convert 'Year' to a factor to ensure it's treated as a discrete variable in the plot
+
 rcASMR_all$Year <- as.factor(rcASMR_all$Year)
 
 ggplot(rcASMR_all, aes(x = Week, y = cumulative_rASMR, group = Year, color = Year)) +
@@ -515,7 +514,7 @@ NI_pop <- NI_pop %>%
   ) %>%
   mutate(
     Gender = str_replace(Gender, "Combine", "All"), 
-    Year = as.numeric(Year) # Make sure Year is numeric
+    Year = as.numeric(Year) 
   )
 
 NI_pop_all <- NI_pop %>%
@@ -525,7 +524,6 @@ NI_pop_all <- NI_pop %>%
 rASMR_deaths_data <- function(deaths_data, gender) {
   deaths_data %>%
     mutate(Year = as.integer(Year), WeekNumber = as.integer(WeekNumber)) %>%
-    # Exclude 'Total_Deaths' from being pivoted and ensure numeric columns are converted to character before pivoting
     mutate(across(where(is.numeric), as.character)) %>%
     select(-`All ages`, -`Total_Deaths`) %>% # 
     # Pivot longer, excluding 'All ages' and 'Total_Deaths' from pivoting
@@ -667,7 +665,7 @@ NI_asmr_long <- pivot_longer(
   ) %>%
   filter(Year >= 2013 & Year <= 2020) # Select only the data for years 2013 to 2020
 
-NI_asmr_long
+
 
 # Calculate cumulative ASMR for each year
 NI_cASMR_all <- NI_asmr_long %>%
@@ -676,7 +674,7 @@ NI_cASMR_all <- NI_asmr_long %>%
   mutate(Cumulative_ASMR = cumsum(ASMR)) %>%
   ungroup()
 
-NI_cASMR_all
+
 
 # Plot the cumulative ASMR for each year
 ggplot(NI_cASMR_all, aes(x = Week, y = Cumulative_ASMR, group = Year, color = as.factor(Year))) +
@@ -751,7 +749,6 @@ three_year_weekly_avg <- NI_rASMR_all %>%
 # Plot the data
 ggplot(NI_rASMR_all, aes(x = WeekNumber, y = rASMR, group = Year, color = Year)) +
   geom_line() +
-  # Use geom_line instead of geom_hline for the baseline to include it in the legend
   geom_line(data = three_year_weekly_avg, aes(y = Mean_ASMR_3yr_avg, group = 1), color = "black", linetype = "dashed", size = 1) +
   scale_color_manual(values = c("2018" = "green", "2019" = "blue", "2020" = "Red")) +
   scale_linetype_manual(values = c("dashed"), labels = c("Three-Year Average rASMR")) +
