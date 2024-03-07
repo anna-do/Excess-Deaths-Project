@@ -29,7 +29,6 @@ prepare_data <- function(sheet_name) {
       next_year_week_1_idx <- which(data$Year == year + 1 & data$WeekNumber == 1)
       
       if(length(week_53_idx) > 0 & length(next_year_week_1_idx) > 0) {
-        # Assuming you want to average specific columns, adjust this as necessary
         avg_columns <- setdiff(names(data), c("Year", "WeekNumber", "Age_Group"))
         
         for(column in avg_columns) {
@@ -80,8 +79,6 @@ calculate_weekly_excess_mortality <- function(year, week, age_group, deaths_data
     filter(Year == year, WeekNumber == week, Age_Group == age_group) %>%
     summarise(Week_Deaths = sum(Deaths, na.rm = TRUE)) %>%
     pull(Week_Deaths)
-  
-  # Adjusting the set of previous years based on the specified year
   if (year < 2021) {
     previous_years <- (year - 5):(year - 1)
   } else if (year == 2021) {
@@ -104,43 +101,32 @@ calculate_weekly_excess_mortality <- function(year, week, age_group, deaths_data
   return(data.frame(Year = year, WeekNumber = week, Age_Group = age_group,  Observed_Mortality = observed_mortality, Expected_Mortality = expected_mortality, Excess_Mortality = weekly_excess_mortality))
 }
 
-# Initialize an empty data frame to store excess mortality data
 EngWal_excess_mortality_data <- data.frame()
 
 # Define the years and weeks of interest
 years <- 2017:2021
 weeks <- 1:52
 
-# Assuming EngWal_death_female, EngWal_death_male, and EngWal_death_all are already loaded and prepared
 categories <- list(Female = EngWal_death_female, Male = EngWal_death_male, All = EngWal_death_all)
 
 # Loop through categories, years, weeks, and age groups to calculate excess mortality
 for (category in names(categories)) {
   sheet_data <- categories[[category]]
   
-  # Get the unique age groups from the data
   age_groups <- unique(sheet_data$Age_Group)
   
-  # Loop through each year, week, and age group
   for (year in years) {
     for (week in weeks) {
       for (age_group in age_groups) {
-        # Calculate weekly excess mortality
         weekly_excess_mortality <- calculate_weekly_excess_mortality(year, week, age_group, sheet_data)
-        
-        # Add the result to the data frame along with the category
         EngWal_excess_mortality_data <- rbind(EngWal_excess_mortality_data, cbind(Category = category, weekly_excess_mortality))
       }
     }
   }
 }
 
-# Output the result
+
 print(EngWal_excess_mortality_data)
-
-
-
-
 
 
 # The data for combined gender with specific Observed Mortality, Expected Mortality and Excess Mortality. 
@@ -151,9 +137,9 @@ EngWal_data_all <- EngWal_excess_mortality_data %>%
 EngWal_excess_mortality_by_week <- EngWal_data_all %>%
   group_by(Year, WeekNumber) %>%
   summarize(Observed_Mortality = sum(Observed_Mortality), Expected_Mortality = sum(Expected_Mortality), Excess_Mortality = sum(Excess_Mortality, na.rm = TRUE), .groups = 'drop')
-# Print the result
+
 print(EngWal_excess_mortality_by_week)
-# Create the plot
+
 EngWal_excess_deaths_plot <- ggplot(EngWal_excess_mortality_by_week, aes(x = WeekNumber, y = Excess_Mortality, group = Year, color = as.factor(Year))) +
   geom_line() + # Line plot for each year
   labs(x = "Week Number", y = "Total Excess Mortality", color = "Year") +
@@ -161,7 +147,6 @@ EngWal_excess_deaths_plot <- ggplot(EngWal_excess_mortality_by_week, aes(x = Wee
   theme(legend.position = "bottom") # Move legend to bottom
 # Print the plot
 print(EngWal_excess_deaths_plot)
-
 
 
 # The weekly deaths for Male
@@ -172,15 +157,15 @@ EngWal_data_male <- EngWal_excess_mortality_data %>%
 EngWal_excess_mortality_by_week_male <- EngWal_data_male %>%
   group_by(Year, WeekNumber) %>%
   summarize(Total_Excess_Mortality = sum(Excess_Mortality, na.rm = TRUE), .groups = 'drop')
-# Print the result
+
 print(EngWal_excess_mortality_by_week_male)
-# Create the plot
+
 EngWal_excess_deaths_male_plot <- ggplot(EngWal_excess_mortality_by_week_male, aes(x = WeekNumber, y = Total_Excess_Mortality, group = Year, color = as.factor(Year))) +
   geom_line() + # Line plot for each year
   labs(x = "Week Number", y = "Total Excess Mortality", color = "Year") +
-  theme_minimal() + # Minimal theme
-  theme(legend.position = "bottom") # Move legend to bottom
-# Print the plot
+  theme_minimal() + 
+  theme(legend.position = "bottom") 
+
 print(EngWal_excess_deaths_male_plot)
 
 
@@ -193,15 +178,15 @@ EngWal_data_female <- EngWal_excess_mortality_data %>%
 EngWal_excess_mortality_by_week_female <- EngWal_data_female %>%
   group_by(Year, WeekNumber) %>%
   summarize(Total_Excess_Mortality = sum(Excess_Mortality, na.rm = TRUE), .groups = 'drop')
-# Print the result
+
 print(EngWal_excess_mortality_by_week_female)
-# Create the plot
+
 EngWal_excess_deaths_female_plot <- ggplot(EngWal_excess_mortality_by_week_female, aes(x = WeekNumber, y = Total_Excess_Mortality, group = Year, color = as.factor(Year))) +
   geom_line() + # Line plot for each year
   labs(x = "Week Number", y = "Total Excess Mortality", color = "Year") +
-  theme_minimal() + # Minimal theme
-  theme(legend.position = "bottom") # Move legend to bottom
-# Print the plot
+  theme_minimal() + 
+  theme(legend.position = "bottom") 
+
 print(EngWal_excess_deaths_female_plot)
 
 
@@ -253,7 +238,7 @@ ggplot(EngWal_total_excess_mortality, aes(x = Age_Group, y = Total_Excess, fill 
   theme(legend.title = element_blank(),
         axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 8)) +
   scale_fill_manual(values = c("Male" = "blue", "Female" = "pink", "All" = "grey50"))
-# Loop through each year and create a plot
+
 for (year in 2017:2021) {
   # Filter data for the current year
   yearly_data <- EngWal_excess_mortality_data %>%
@@ -261,7 +246,6 @@ for (year in 2017:2021) {
     group_by(Age_Group, Category) %>%
     summarise(Total_Excess = sum(Excess_Mortality, na.rm = TRUE), .groups = "drop")
   
-  # Plot for the current year
   current_year <- ggplot(yearly_data, aes(x = Age_Group, y = Total_Excess, fill = Category)) +
     geom_bar(stat = "identity", position = position_dodge(width = 0.7)) +
     labs(title = paste("England and Wales Total Excess Mortality by Age Group and Gender in", year),
@@ -272,7 +256,6 @@ for (year in 2017:2021) {
           axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 8)) +
     scale_fill_manual(values = c("Male" = "blue", "Female" = "pink", "All" = "grey50"))
   
-  # Print the plot
   print(current_year)
 }
 
@@ -293,7 +276,6 @@ Scot_Deaths_all <- Scot_Deaths_all %>%
     WeekNumber = as.integer(WeekNumber)
   )
 
-# Make sure the data is sorted properly by year and week number
 Scot_Deaths <- Scot_Deaths_all %>%
   arrange(Year, WeekNumber)
 # Find years with 53 weeks
@@ -324,7 +306,6 @@ for (year in Scot_years_with_53_weeks) {
 Scot_excess_mortality_results <- data.frame()
 # Loop through the years of interest
 for (year_of_interest in 2017:2021) {
-  # Define the range of previous five years, with special handling for 2020 and 2021
   if (year_of_interest <= 2019) {
     previous_years <- (year_of_interest - 5):(year_of_interest - 1)
   } else {
@@ -368,7 +349,7 @@ Scot_annual_excess_mortality <- Scot_excess_mortality_results %>%
   group_by(Year) %>%
   summarise(Total_Excess_Mortality = sum(Excess_Mortality, na.rm = TRUE), .groups = "drop")
 
-# Plot the trend of total annual excess mortality over the years
+
 ggplot(Scot_annual_excess_mortality, aes(x = Year, y = Total_Excess_Mortality)) +
   geom_line() +
   geom_point() +
@@ -382,6 +363,7 @@ Scot_weekly_excess_mortality_specific_year <- Scot_excess_mortality_results %>%
   filter(Year == specific_year) %>%
   group_by(WeekNumber) %>%
   summarise(Weekly_Excess_Mortality = sum(Excess_Mortality, na.rm = TRUE), .groups = "drop")
+
 # Plot the weekly excess mortality trends for different sexes in the chosen year
 ggplot(Scot_weekly_excess_mortality_specific_year, aes(x = WeekNumber, y = Weekly_Excess_Mortality)) +
   geom_line() +
@@ -440,11 +422,11 @@ for (year in 2017:2021) {
 Scot_yearly_totals <- Scot_yearly_totals %>%
   left_join(five_year_averages, by = "Year") %>%
   mutate(Excess_Deaths = ifelse(Year >= 2017, Yearly_Deaths - Average_Deaths, NA))
-# Display the yearly excess deaths
+
 Scot_yearly_totals %>%
   filter(Year >= 2017 & Year <= 2021)
 
-# The excess data in Scotland
+
 Scot_yearly_excess <- Scot_yearly_totals %>%
   filter(Year >= 2017 & Year <= 2021)
 
@@ -561,10 +543,9 @@ NI_yearly_totals <- NI_Deaths_all %>%
 # Initialize a data frame to hold the 5-year averages
 NI_five_year_averages <- data.frame(Year = integer(), Average_Deaths = numeric())
 
-# Populate the five_year_averages with the appropriate years and their corresponding averages
+
 for (year in 2017:2021) {
   if (year <= 2019) {
-    # Calculate the average of the total yearly deaths from the previous five years
     average_deaths <- NI_yearly_totals %>%
       filter(Year >= (year - 5) & Year < year) %>%
       summarise(Average_Deaths = mean(Yearly_Deaths)) %>%
@@ -576,7 +557,6 @@ for (year in 2017:2021) {
       summarise(Average_Deaths = mean(Yearly_Deaths)) %>%
       pull(Average_Deaths)
   }
-  # Add the data to the five_year_averages data frame
   NI_five_year_averages <- rbind(NI_five_year_averages, data.frame(Year = year, Average_Deaths = average_deaths))
 }
 
@@ -604,7 +584,7 @@ ggplot(NI_filtered_data, aes(x = Year, y = Excess_Deaths)) +
 
 
 # Comparison between three regions
-# Combine the datasets
+# Combine datasets
 combined_excess_mortality <- bind_rows(
   EngWal_data_all %>% mutate(Region = "EngWal"),
   Scot_excess_mortality_results %>% mutate(Region = "Scotland"),
@@ -646,7 +626,7 @@ combined_excess_mortality <- bind_rows(
   NI_excess_mortality_results %>% select(Year, WeekNumber, Excess_Mortality) %>% mutate(Region = "Northern Ireland")
 )
 
-# Proceed with plotting
+
 ggplot(combined_excess_mortality, aes(x = WeekNumber, y = Excess_Mortality, color = Region, group = interaction(Year, Region))) +
   geom_line() +
   geom_point() +
@@ -729,6 +709,7 @@ Combined_Cumulative_Deaths_2020 <- combined_excess_mortality_results %>%
   group_by(Region) %>%
   mutate(Cumulative_Excess_Mortality = cumsum(Excess_Mortality)) %>%
   ungroup()
+
 # Plot the cumulative excess mortality by week number for each region
 ggplot(data = Combined_Cumulative_Deaths_2020, aes(x = WeekNumber, y = Cumulative_Excess_Mortality, group = Region, color = Region)) +
   geom_line() +
@@ -760,7 +741,6 @@ prepare_data_2 <- function(sheet_name) {
       WeekNumber = as.integer(WeekNumber)
     )
   age_group_cols <- setdiff(names(data), c("Year", "WeekNumber", "All ages"))
-  # Instead of re-selecting columns, directly pivot longer to ensure all age group data is retained
   data_long <- data %>%
     pivot_longer(
       cols = age_group_cols,
@@ -828,7 +808,6 @@ EngWal_dmale <- add_53rd_week(EngWal_death_male_2)
 EngWal_dall <- add_53rd_week(EngWal_death_all_2)
 
 calculate_excess_deaths_2 <- function(year, week, age_group, deaths_data) {
-  # Adjusting the set of previous years based on the specified year
   if (year < 2021) {
     previous_years <- (year - 5):(year - 1)
   } else if (year == 2021) {
@@ -866,9 +845,7 @@ categories <- list(Female = EngWal_dfemale, Male = EngWal_dmale, All = EngWal_da
 # Loop through categories, years, weeks, and age groups to calculate excess mortality
 for (category in names(categories)) {
   sheet_data <- categories[[category]]
-  # Get the unique age groups from the data
   age_groups <- unique(sheet_data$Age_Group)
-  # Loop through each year, week, and age group
   for (year in years_2) {
     for (week in weeks_2) {
       for (age_group in age_groups) {
@@ -896,7 +873,7 @@ ggplot(EngWal_annual_excess_mortality_2, aes(x = Year, y = Total_Excess_Mortalit
   theme_minimal() +
   theme(legend.title = element_blank())
 
-# Choose a specific year to compare the weekly mortality trend by sex
+
 specific_year <- 2020
 EngWal_weekly_excess_mortality_specific_year_2 <- EngWal_excess_mortality_data_2 %>%
   filter(Year == specific_year) %>%
@@ -916,7 +893,6 @@ ggplot(EngWal_weekly_excess_mortality_specific_year_2, aes(x = WeekNumber, y = W
 
 
 
-# Summarize the data by Age_Group and Category to get the total excess mortality
 EngWal_total_excess_mortality_2 <- EngWal_excess_mortality_data_2 %>%
   group_by(Age_Group, Category) %>%
   summarise(Total_Excess = sum(Excess_Mortality, na.rm = TRUE), .groups = "drop")
@@ -930,14 +906,16 @@ ggplot(EngWal_total_excess_mortality_2, aes(x = Age_Group, y = Total_Excess, fil
   theme(legend.title = element_blank(),
         axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 8)) +
   scale_fill_manual(values = c("Male" = "blue", "Female" = "pink", "All" = "grey50"))
-# Loop through each year and create a plot
+
+
 for (year in 2017:2021) {
   # Filter data for the current year
   yearly_data_2 <- EngWal_excess_mortality_data_2 %>%
     filter(Year == year) %>%
     group_by(Age_Group, Category) %>%
     summarise(Total_Excess = sum(Excess_Mortality, na.rm = TRUE), .groups = "drop")
-  # Plot for the current year
+
+  
   current_year_2 <- ggplot(yearly_data_2, aes(x = Age_Group, y = Total_Excess, fill = Category)) +
     geom_bar(stat = "identity", position = position_dodge(width = 0.7)) +
     labs(title = paste("England and Wales Total Excess Mortality by Age Group and Gender in", year),
@@ -948,7 +926,6 @@ for (year in 2017:2021) {
           axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 8)) +
     scale_fill_manual(values = c("Male" = "blue", "Female" = "pink", "All" = "grey50"))
   
-  # Print the plot
   print(current_year_2)
 }
 
@@ -967,7 +944,7 @@ EngWal_excess_mortality_long_2 <- EngWal_excess_mortality_data_2 %>%
   summarise(Weekly_Excess_Deaths = sum(Excess_Mortality, na.rm = TRUE)) %>%
   ungroup()
 
-# Now we'll generate a plot for each week
+
 five_yr_weekly_plots <- list()
 for(week in unique(EngWal_excess_mortality_long_2$WeekNumber)) {
   # Filter the data for the specific week
@@ -992,7 +969,6 @@ for(week in unique(EngWal_excess_mortality_long_2$WeekNumber)) {
 
 # EngWal Yearly - we don't sum all week deaths,use original data, not converted data
 calculate_expected_annual_deaths_2 <- function(year, data) {
-  # Adjusting the set of previous years based on the specified year
   if (year < 2021) {
     previous_years <- (year - 5):(year - 1)
   } else if (year == 2021) {
@@ -1029,8 +1005,6 @@ calculate_expected_annual_deaths_2 <- function(year, data) {
   return(expected_deaths)
 }
 
-
-# Assuming 'categories' list contains the actual data frames with 'All ages' and 'Age_Group' columns
 categories_2 <- list(Female = EngWal_death_female_2, Male = EngWal_death_male_2, All = EngWal_death_all_2)
 
 
@@ -1039,13 +1013,10 @@ expected_annual_deaths_results_2 <- data.frame()
 # Loop through each category and year to calculate expected annual deaths
 for (category_name in names(categories_2)) {
   for (year in years_2) {
-    # Apply the function to calculate expected annual deaths
     expected_deaths_data <- calculate_expected_annual_deaths_2(year, categories_2[[category_name]])
     
-    # Add category information to the results
     expected_deaths_data$Category <- category_name
     
-    # Append the results to the data frame
     expected_annual_deaths_results_2 <- rbind(expected_annual_deaths_results_2, expected_deaths_data)
   }
 }
@@ -1101,10 +1072,6 @@ excess_deaths_results_EngWal_2 <- merged_data[, c("Category", "Year", "Yearly_To
 
 EngWal_excess_mortality_results_yearly_2 <- excess_deaths_results_EngWal_2 %>%
   filter(Category == "All")
-
-
-
-
 
 
 
@@ -1167,7 +1134,6 @@ Scot_dall <-add_53rd_week_SNI(Scot_Deaths_all)
 Scot_excess_mortality_results_weekly_2 <- data.frame()
 
 for (year_2 in 2017:2021) {
-  # Define the range of previous five years, with special handling for 2020 and 2021
   if (year_2 <= 2019) {
     previous_years <- (year_2 - 5):(year_2 - 1)
   } else {
@@ -1203,7 +1169,6 @@ for (year_2 in 2017:2021) {
   }
 }
 
-# Display the results
 print(Scot_excess_mortality_results_weekly_2)
 
 
@@ -1221,13 +1186,11 @@ for (year_2 in 2017:2021) {
     previous_years <- 2015:2019
   }
   
-  # Get observed mortality for the specified year
   observed_mortality <- Scot_dall %>%
     filter(Year == year_2) %>%
     summarise(Yearly_Deaths = sum(`All ages`, na.rm = TRUE)) %>%
     pull(Yearly_Deaths)
   
-  # Calculate the expected mortality as the average of previous years' deaths
   expected_mortality <- Scot_dall %>%
     filter(Year %in% previous_years) %>%
     group_by(Year) %>%
@@ -1238,7 +1201,6 @@ for (year_2 in 2017:2021) {
   # Calculate yearly excess mortality
   yearly_excess_mortality <- observed_mortality - expected_mortality
   
-  # Bind the results to the data frame
   Scot_excess_mortality_results_yearly_2 <- rbind(Scot_excess_mortality_results_yearly_2, data.frame(
     Year = year_2,
     Observed_Mortality = observed_mortality,
@@ -1321,7 +1283,7 @@ NI_dall <-add_53rd_week_SNI(NI_Deaths_all_2)
 
 NI_excess_mortality_results_weekly_2 <- data.frame()
 
-# Loop through the years of interest
+
 for (year_2 in 2017:2021) {
   # Define the range of previous five years, with special handling for 2020 and 2021
   if (year_2 <= 2019) {
@@ -1359,7 +1321,7 @@ for (year_2 in 2017:2021) {
   }
 }
 
-# Display the results
+
 print(NI_excess_mortality_results_weekly_2)
 
 
@@ -1368,8 +1330,6 @@ print(NI_excess_mortality_results_weekly_2)
 
 
 # Norther Ireland Yearly
-
-
 NI_excess_mortality_results_yearly_2 <- data.frame()
 for (year_2 in 2017:2021) {
   # Define the range of previous five years, with special handling for 2020 and 2021
@@ -1406,7 +1366,7 @@ for (year_2 in 2017:2021) {
   ))
 }
 
-# View the final results
+
 print(NI_excess_mortality_results_yearly_2)
 
 # Plot for NI yearly
@@ -1424,7 +1384,7 @@ NI_weekly_excess_mortality_specific_year_2 <- NI_excess_mortality_results_weekly
   group_by(WeekNumber) %>%
   summarise(Weekly_Excess_Mortality = sum(Excess_Mortality, na.rm = TRUE), .groups = "drop")
 
-# Plot the weekly excess mortality trends for different sexes in the chosen year
+
 ggplot(NI_weekly_excess_mortality_specific_year_2, aes(x = WeekNumber, y = Weekly_Excess_Mortality)) +
   geom_line() +
   geom_point() +
@@ -1460,7 +1420,6 @@ combined_yearly_results_2 <- bind_rows(
   NI_results_2
 )
 
-# View the combined dataset
 print(combined_yearly_results_2)
 
 
@@ -1475,9 +1434,9 @@ plot_yearly_2 <- ggplot(combined_yearly_results_2, aes(x = Year, y = Excess_Mort
     x = "Year",
     y = "Excess Mortality"
   ) +
-  theme(legend.position = "bottom")  # Adjust the legend position as needed
+  theme(legend.position = "bottom") 
 
-# Print the plot
+
 print(plot_yearly_2)
 
 
@@ -1501,7 +1460,7 @@ combined_weekly_results_2 <- bind_rows(
   NI_weekly_results_2
 )
 
-# View the combined dataset
+
 print(combined_weekly_results_2)
 
 
@@ -1515,9 +1474,9 @@ plot_weekly_2 <- ggplot(combined_weekly_results_2, aes(x = WeekNumber, y = Exces
     x = "Week Number",
     y = "Excess Deaths"
   ) +
-  theme(legend.position = "bottom")  # Adjust the legend position as needed
+  theme(legend.position = "bottom")  
 
-# Print the plot
+
 print(plot_weekly_2)
 
 
@@ -1634,6 +1593,7 @@ Combined_Cumulative_Deaths_2020_2 <- combined_weekly_results_2 %>%
   group_by(Region) %>%
   mutate(Cumulative_Excess_Mortality = cumsum(Excess_Mortality)) %>%
   ungroup()
+
 # Plot the cumulative excess mortality by week number for each region
 ggplot(data = Combined_Cumulative_Deaths_2020_2, aes(x = WeekNumber, y = Cumulative_Excess_Mortality, group = Region, color = Region)) +
   geom_line() +
@@ -1643,8 +1603,6 @@ ggplot(data = Combined_Cumulative_Deaths_2020_2, aes(x = WeekNumber, y = Cumulat
   theme_minimal() +
   scale_color_brewer(palette = "Set1") +
   theme(legend.title = element_blank()) 
-
-
 
 
 
@@ -1664,9 +1622,9 @@ comparison_data_2020_weekly <- comparison_data_weekly %>%
 
 comparison_table_2020_weekly <- comparison_data_2020_weekly %>%
   select(Year, WeekNumber, Region, Excess_Mortality_Method1, Excess_Mortality_Method2, Difference)
-print(comparison_table_2020)
 
 
+print(comparison_table_2020_weekly)
 
 
 # Output Comparison Yearly
@@ -1679,7 +1637,7 @@ combined_yearly_results_2
 yearly_comparison_data <- merge(annual_excess_mortality_by_region, combined_yearly_results_2,
                                 by = c("Year", "Region"))
 
-# Now rename the columns as desired
+
 yearly_comparison_data <- yearly_comparison_data %>%
   rename(Excess_Mortality_Method1 = Total_Excess_Mortality,
          Excess_Mortality_Method2 = Excess_Mortality)
